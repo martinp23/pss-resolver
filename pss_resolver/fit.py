@@ -69,7 +69,7 @@ def mcr_factors(X: np.ndarray, n_components: int = 2, known_id: int = 0, svd_red
         X = (u[:,:n_components] @ np.diag(s[:n_components]) @ t[:n_components,:]).copy()
 
 
-    # fudge negatives to zero
+    # set negatives to zero
     if np.min(X)<0:
         #print("The lowest value in X is ",np.min(X),", setting negatives to zero.")
         X[X<0]=0+1e-15
@@ -96,16 +96,10 @@ def mcr_factors(X: np.ndarray, n_components: int = 2, known_id: int = 0, svd_red
             # re-order S_guess so that known spectrum is first
             S_guess[[0, closest_idx],:] = S_guess[[closest_idx, 0], :]
 
-            # add some noise to S_guess[:,1]
-            # S_guess[1,:] += np.random.rand(S_guess.shape[1]) * 0.02
             
             
             S_guess[1,:] /= np.linalg.norm(m.components_)
 
-            # mean_c = c_nmf[0,:].sum()
-            # print(c_nmf)
-            # print(mean_c)
-            # S_guess[1,:] = S_guess[1,:]/mean_c
 
 
         elif init_guess == "flat":
@@ -129,10 +123,6 @@ def mcr_factors(X: np.ndarray, n_components: int = 2, known_id: int = 0, svd_red
             k = X[known_id,:]
             S_guess[0,:] = k  # set known spectrum
 
-        # plt.figure()
-        # plt.plot(S_guess.T.copy(),'--')
-        # plt.show()
-        #S_guess[1,:] = S_guess[1,:]/2
 
         mcrar.fit(X,  ST=S_guess ,st_fix=[0],verbose=False)
         X_calc = (mcrar.C_@mcrar.ST_)
@@ -157,8 +147,6 @@ def mcr_factors(X: np.ndarray, n_components: int = 2, known_id: int = 0, svd_red
             guess.W[:,[0,1]] = guess.W[:,[1,0]]
             guess.H[[0,1],:] = guess.H[[1,0],:]
 
-        # guess.H[0,:] = known_H[0,:]
-        # guess.W[0,:] = known_W[0,:]
 
         if method == 'FroALS':
             model = mcrnmf.FroALS(rank=n_components, constraint_kind=4,iter_max=2000,tol=1e-4,order='ceu')
@@ -198,7 +186,7 @@ def get_acceptable_solutions(s, ST_calc, C_calc,n=100,lb=-1,ub=1,threshold=1.00)
         rel_err = (recon_err/orig_err)
         #if np.linalg.norm(ST_rot[0,:] - ST[0,:]) > 0.1:
         known_err = np.linalg.norm(ST_rot[0,:] - ST_calc[0,:]) / np.linalg.norm(ST_calc[0,:])
-        err = rel_err  + known_err # add a large error penalty if the first spectrum deviates too much from the known
+        err = rel_err  + known_err # add an error penalty if the first spectrum deviates too much from the known
 
         res.append([x,err,C_rot,ST_rot])
     
