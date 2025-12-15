@@ -1,5 +1,3 @@
-<a target="_blank" href="https://colab.research.google.com/github/martinp23/pss-resolver">
-  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
-</a>
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/martinp23/pss-resolver/HEAD?urlpath=%2Fdoc%2Ftree%2Fdemo+notebook.ipynb)
 
 # pss-resolver
