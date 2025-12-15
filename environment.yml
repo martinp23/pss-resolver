@@ -1,0 +1,17 @@
+name: general-fitting
+channels:
+  - conda-forge
+dependencies:
+  - numpy=2.2.6
+  - scipy=1.16.3
+  - pandas=2.3.3
+  - matplotlib=3.10.7
+  - scikit-learn=1.7.2
+  - ipykernel
+  - openpyxl
+  - pymcr=0.5.1
+  - notebook
+  - nbconvert
+  - python=3.13
+  - mcrnmf==0.1.2
+
