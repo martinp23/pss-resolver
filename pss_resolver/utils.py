@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from .fit import mcr_factors,get_acceptable_solutions
+from .fit import mcr_factors,get_acceptable_solutions,calc_reconstruction_error
 
 
 
@@ -19,7 +19,8 @@ def proc_data(wavelengths,X,labels,threshold=1.001):
 
     min_C = np.min(np.array(res_C),axis=0)
     max_C = np.max(np.array(res_C),axis=0)
-
+    print(" #### Reconstruction error: ####")
+    print(calc_reconstruction_error(X,c,spec))
     
     print(" #### Isomer Ratios: ####")
     for i,x in enumerate(labels):

@@ -18,14 +18,6 @@ except ImportError:
     print("mcrnmf not found, proceeding without it.")
     MCRNMF_AVAILABLE = False
 
-# some figure defaults
-plt.rcParams["font.family"] = "sans-serif"
-plt.rcParams["font.sans-serif"] = ["Arial"]
-plt.rcParams["font.size"] = 7
-plt.rcParams['lines.linewidth'] = 0.5
-plt.rcParams['pdf.fonttype'] = 42
-plt.rcParams['ps.fonttype'] = 42 
-plt.rcParams['svg.fonttype'] = 'none'
 
 def mse(C: np.ndarray, ST: np.ndarray, D_actual: np.ndarray, D_calculated: np.ndarray) -> float:
     """ Follows mse signature from pymcr.metrics"""
