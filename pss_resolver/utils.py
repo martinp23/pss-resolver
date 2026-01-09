@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from .fit import mcr_factors,get_acceptable_solutions,calc_reconstruction_error
+from typing import Optional
 
 
 
@@ -47,3 +48,62 @@ def proc_data(wavelengths,X,labels,threshold=1.001):
     plt.show()
 
     return c,res_ST,res_C
+
+from typing import Optional
+def export_to_csv(title: str, dtype: str, data: np.ndarray, wavelengths: Optional[np.ndarray]=None) -> None:
+
+    if dtype not in ['C','S','D']:
+        raise ValueError("dtype must be one of 'C', 'S', or 'D'")
+    if dtype in ['S','D'] and wavelengths is None:
+        raise ValueError("wavelengths must be provided when dtype is 'S' or 'D'")
+    df=None
+    if dtype == 'C':
+        labels = []
+        if isinstance(data,list):
+            n_solutions = len(data)
+            data = np.vstack(data)
+            block_size = data.shape[0] // n_solutions
+            
+            for sol in range(n_solutions):
+                for sample in range(block_size):
+                    labels.append(f'Solution {sol+1} sample {sample+1}')
+
+        if len(labels)>0:
+            df = pd.DataFrame(data, index=labels,columns=['Component 1', 'Component 2'])
+        else:
+            df = pd.DataFrame(data, columns=['Component 1', 'Component 2'])
+
+    elif dtype == 'S':
+        labels = []
+        if isinstance(data,list):
+            n_solutions = len(data)
+            data = np.vstack(data)
+            block_size = data.shape[0] // n_solutions
+
+            for sol in range(n_solutions):
+                for species in range(block_size):
+                    labels.append(f'Solution {sol+1} species {species+1}')
+
+            #data = data.T
+        if len(labels)>0:
+            df = pd.DataFrame(data, index=labels, columns=[f'{w} nm' for w in wavelengths])
+        else:
+            df = pd.DataFrame(data, columns=[f'{w} nm' for w in wavelengths])
+        # df.index.name = 'Wavelength (nm)'
+
+    elif dtype == 'D':
+        df = pd.DataFrame(data.T, index=wavelengths)
+        df.index.name = 'Wavelength (nm)'
+        df.columns = [f'Sample {i+1}' for i in range(data.shape[0])]
+    
+    if isinstance(df,pd.DataFrame):
+        df.to_csv(f"{title}_{dtype}.csv")
+    else:
+        raise ValueError("DataFrame creation failed.")
+
+def export_dcs_to_csv(title: str, wavelengths: np.ndarray, D: np.ndarray, C: np.ndarray, S: np.ndarray):
+
+    export_to_csv(title, 'D', D, wavelengths)
+    export_to_csv(title, 'C', C)
+    export_to_csv(title, 'S', S, wavelengths)
+    
