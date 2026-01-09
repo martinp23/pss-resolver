@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from .fit import mcr_factors,get_acceptable_solutions,calc_reconstruction_error
-from typing import Optional
+from typing import Optional,Union
 
 
 
@@ -49,9 +49,15 @@ def proc_data(wavelengths,X,labels,threshold=1.001):
 
     return c,res_ST,res_C
 
-from typing import Optional
-def export_to_csv(title: str, dtype: str, data: np.ndarray, wavelengths: Optional[np.ndarray]=None) -> None:
-
+def export_to_csv(title: str, dtype: str, data: Union[list,np.ndarray], wavelengths: Optional[np.ndarray]=None) -> None:
+    """ Exports a data matrix or list to CSV file. Each file is named title_dtype.csv where dtype is 'C', 'S', or 'D'.
+    
+    Args:
+        title (str): Base title for the CSV file.
+        dtype (str): Type of data: 'C' for concentration, 'S' for spectra, 'D' for data matrix.
+        data (np.ndarray or list): Data matrix or a list of matrices corresponding to different valid solutions.
+        wavelengths (np.ndarray, optional): Wavelengths corresponding to the rows of D and S. Required if dtype is 'S' or 'D'.
+    """
     if dtype not in ['C','S','D']:
         raise ValueError("dtype must be one of 'C', 'S', or 'D'")
     if dtype in ['S','D'] and wavelengths is None:
@@ -101,8 +107,16 @@ def export_to_csv(title: str, dtype: str, data: np.ndarray, wavelengths: Optiona
     else:
         raise ValueError("DataFrame creation failed.")
 
-def export_dcs_to_csv(title: str, wavelengths: np.ndarray, D: np.ndarray, C: np.ndarray, S: np.ndarray):
-
+def export_dcs_to_csv(title: str, wavelengths: np.ndarray, D: np.ndarray, C: Union[list,np.ndarray], S: Union[list,np.ndarray]):
+    """ Exports the D, C, and S matrices to CSV files. Each file is named title_D.csv, title_C.csv, and title_S.csv respectively.
+    
+    Args:
+        title (str): Base title for the CSV files.
+        wavelengths (np.ndarray): Wavelengths corresponding to the rows of D and S.
+        D (np.ndarray): Data matrix.
+        C (np.ndarray or list): Concentration matrix or a list of concentration matrices corresponding to different valid solutions.
+        S (np.ndarray or list): Spectra matrixor a list of concentration matrices corresponding to different valid solutions.
+    """
     export_to_csv(title, 'D', D, wavelengths)
     export_to_csv(title, 'C', C)
     export_to_csv(title, 'S', S, wavelengths)
