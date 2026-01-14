@@ -177,7 +177,7 @@ def rotation_simple(ST: np.ndarray, C,x) -> (np.ndarray,np.ndarray):
     ST_rot[ST_rot < 0] = 0
     return C_rot,ST_rot
 
-def get_acceptable_solutions(s, ST_calc, C_calc,n=100,lb=-1,ub=1,threshold=1.00) -> (list,list):
+def get_acceptable_solutions(s, ST_calc, C_calc,n=201,lb=-1,ub=1,threshold=1.001) -> (list,list):
     orig_err = calc_reconstruction_error(s,C_calc,ST_calc)
     res = []
     for x in np.linspace(lb,ub,n):
