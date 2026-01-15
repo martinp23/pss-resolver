@@ -34,6 +34,8 @@ def proc_data(wavelengths,X,labels,threshold=1.001):
     plt.legend()
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Absorbance')
+    #make ylim min 0
+    plt.ylim(bottom=0)
     plt.subplot(212)
     plt.plot(wavelengths,spec[0,:].T,label='Known spec')
     for ii,spec in enumerate(res_ST):
@@ -41,6 +43,8 @@ def proc_data(wavelengths,X,labels,threshold=1.001):
             plt.plot(wavelengths,spec[1,:].T,'r',label=['Extracted spec'],alpha=0.3)
         else:
             plt.plot(wavelengths,spec[1,:].T,'r',alpha=0.3)
+    #make ylim min 0
+    plt.ylim(bottom=0)
     plt.legend()
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Absorbance')
