@@ -6,11 +6,11 @@ from typing import Optional,Union
 
 
 
-def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     data = pd.read_excel(file,index_col=0)
     X = data.values[:,:].T
     print(f"##### Results for file: {file} #####")
-    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=True,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save)
+    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save)
 
     return c,ST,C
 
