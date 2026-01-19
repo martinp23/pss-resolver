@@ -6,17 +6,17 @@ from typing import Optional,Union
 
 
 
-def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True,save_figs=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     data = pd.read_excel(file,index_col=0)
     X = data.values[:,:].T
     print(f"##### Results for file: {file} #####")
-    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save)
+    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,save_figs=save_figs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save)
 
     return c,ST,C
 
 
 
-def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, filename=None, n_solutions_to_save=10):
+def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=False,filename=None, n_solutions_to_save=10):
 
     c,spec,X_calc = mcr_factors(X, n_components=2, known_id=0, init_guess="nmf",method='mvol')
     res_ST,res_C = get_acceptable_solutions(X, spec, c, n=201, lb=-1, ub=1,threshold=threshold)
@@ -57,6 +57,14 @@ def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, filename=No
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Absorbance')
     plt.tight_layout()
+ 
+
+    if save_figs:
+        if filename is None:
+            filename = 'mcr_results'
+        plt.savefig(filename.split('.')[0]+'_mcr_results.pdf')
+        plt.savefig(filename.split('.')[0]+'_mcr_results.png',dpi=300)
+   
     plt.show()
 
     if save_csvs:
