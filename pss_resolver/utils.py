@@ -6,17 +6,17 @@ from typing import Optional,Union
 
 
 
-def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True,save_figs=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     data = pd.read_excel(file,index_col=0)
     X = data.values[:,:].T
     print(f"##### Results for file: {file} #####")
-    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save)
+    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,save_figs=save_figs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save)
 
     return c,ST,C
 
 
 
-def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, filename=None, n_solutions_to_save=10):
+def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=False,filename=None, n_solutions_to_save=10):
 
     c,spec,X_calc = mcr_factors(X, n_components=2, known_id=0, init_guess="nmf",method='mvol')
     res_ST,res_C = get_acceptable_solutions(X, spec, c, n=201, lb=-1, ub=1,threshold=threshold)
@@ -57,6 +57,14 @@ def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, filename=No
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Absorbance')
     plt.tight_layout()
+ 
+
+    if save_figs:
+        if filename is None:
+            filename = 'mcr_results'
+        plt.savefig(filename.split('.')[0]+'_mcr_results.pdf')
+        plt.savefig(filename.split('.')[0]+'_mcr_results.png',dpi=300)
+   
     plt.show()
 
     if save_csvs:
@@ -102,9 +110,10 @@ def export_to_csv(title: str, dtype: str, data: Union[list,np.ndarray], waveleng
                     labels.append(f'Solution {sol+1} sample {sample+1}')
 
         if len(labels)>0:
-            df = pd.DataFrame(data, index=labels,columns=['Component 1', 'Component 2'])
+            #df = pd.DataFrame(data, index=labels,columns=['Component 1', 'Component 2'])
+            df = pd.DataFrame(data.T, index=['Component 1', 'Component 2'],columns=labels)
         else:
-            df = pd.DataFrame(data, columns=['Component 1', 'Component 2'])
+            df = pd.DataFrame(data.T, index=['Component 1', 'Component 2'])
 
     elif dtype == 'S':
         labels = []
@@ -119,9 +128,9 @@ def export_to_csv(title: str, dtype: str, data: Union[list,np.ndarray], waveleng
 
             #data = data.T
         if len(labels)>0:
-            df = pd.DataFrame(data, index=labels, columns=[f'{w} nm' for w in wavelengths])
+            df = pd.DataFrame(data.T, columns=labels, index=wavelengths)
         else:
-            df = pd.DataFrame(data, columns=[f'{w} nm' for w in wavelengths])
+            df = pd.DataFrame(data.T, index=wavelengths)
         # df.index.name = 'Wavelength (nm)'
 
     elif dtype == 'D':
