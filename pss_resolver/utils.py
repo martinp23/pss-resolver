@@ -3,20 +3,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from .fit import mcr_factors,get_acceptable_solutions,calc_reconstruction_error
 from typing import Optional,Union
+from scipy.signal import savgol_filter
 
-
-
-def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True,save_figs=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True,save_figs=True,smooth=False) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     data = pd.read_excel(file,index_col=0)
     X = data.values[:,:].T
     print(f"##### Results for file: {file} #####")
-    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,save_figs=save_figs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save)
 
+    if smooth is True:
+        smooth_param = (21,3) # window length, polyorder
+    elif isinstance(smooth,tuple) and len(smooth)==2:
+        smooth_param = smooth
+    else:        
+        smooth_param = None
+
+    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,save_figs=save_figs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save,smooth_param=smooth_param)
+    if smooth_param is not None:
+        print(f"Data was smoothed with Savitzky-Golay filter (window_length={smooth_param[0]}, polyorder={smooth_param[1]})")
+        print("In the first plot, the dashed lines show the original data and \nthe solid lines show the reconstructed data from MCR. \n" \
+        "Both of these sets of lines should overlay perfectly. If the dashed lines \n are substantially different from the solid lines,\n" \
+        "start by adjusting the smooth parameter (try increasing the window length \n or decreasing the polyorder) and see if that improves things.")
     return c,ST,C
 
 
 
-def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=False,filename=None, n_solutions_to_save=10):
+def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=False,filename=None, n_solutions_to_save=10,smooth_param=None):
+    X_orig = X.copy()
+    if isinstance(smooth_param,tuple) and len(smooth_param)==2: 
+        X = savgol_filter(X, window_length=smooth_param[0], polyorder=smooth_param[1], axis=1)
 
     c,spec,X_calc = mcr_factors(X, n_components=2, known_id=0, init_guess="nmf",method='mvol')
     res_ST,res_C = get_acceptable_solutions(X, spec, c, n=201, lb=-1, ub=1,threshold=threshold)
@@ -33,7 +47,7 @@ def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=F
     plt.subplots(2,1,figsize=(4,5))
     plt.subplot(211)
     plt.plot(wavelengths,X_calc.T,label=labels)
-    plt.plot(wavelengths,X.T,'--')
+    plt.plot(wavelengths,X_orig.T,'--')
     plt.legend()
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Absorbance')
