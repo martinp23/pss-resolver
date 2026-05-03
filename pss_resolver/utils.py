@@ -5,9 +5,8 @@ from .fit import mcr_factors,get_acceptable_solutions,calc_reconstruction_error
 from typing import Optional,Union
 from scipy.signal import savgol_filter
 
-def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True,save_figs=True,smooth=False) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True,save_figs=True,smooth=False,trim=False) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     data = pd.read_excel(file,index_col=0)
-    X = data.values[:,:].T
     print(f"##### Results for file: {file} #####")
 
     if smooth is True:
@@ -17,6 +16,13 @@ def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_sav
     else:        
         smooth_param = None
 
+    if trim is not False:
+        if isinstance(trim,tuple) and len(trim)==2:
+            data = data[(data.index >= trim[0]) & (data.index <= trim[1])]
+        else:
+            print("Trim parameter should be a tuple of (lower_bound, upper_bound). Ignoring trim.")
+    
+    X = data.values[:,:].T
     c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,save_figs=save_figs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save,smooth_param=smooth_param)
     if smooth_param is not None:
         print(f"Data was smoothed with Savitzky-Golay filter (window_length={smooth_param[0]}, polyorder={smooth_param[1]})")
