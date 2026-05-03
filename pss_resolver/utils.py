@@ -46,8 +46,13 @@ def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=F
         print(f"{x}:  Acceptable solutions: {min_C[i,0]:.2f}-{max_C[i,0]:.2f} : {min_C[i,1]:.2f}-{max_C[i,1]:.2f}")
     plt.subplots(2,1,figsize=(4,5))
     plt.subplot(211)
-    plt.plot(wavelengths,X_calc.T,label=labels)
-    plt.plot(wavelengths,X_orig.T,'--')
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    for i in range(X.shape[0]):
+        color = colors[i % len(colors)]
+        plt.plot(wavelengths, X_calc.T[:,i], color=color, label=labels[i])
+        plt.plot(wavelengths, X_orig.T[:,i], '--', color=color)
+    # plt.plot(wavelengths,X_calc.T,label=labels)
+    # plt.plot(wavelengths,X_orig.T,'--')
     plt.legend()
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Absorbance')
