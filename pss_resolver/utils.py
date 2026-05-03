@@ -23,12 +23,54 @@ def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_sav
             print("Trim parameter should be a tuple of (lower_bound, upper_bound). Ignoring trim.")
     
     X = data.values[:,:].T
+
+    # fudge data < 0 to zero to avoid issues with MCR-NMF
+    if np.any(X < 0):
+        print("""
+        *************************************************************
+        ****     Warning     Negative values found in data.      ****
+        *************************************************************      
+        
+        Please check your data and consider re-collecting with higher 
+        integration time.
+        
+        Or, you can trim the data to remove wavelengths with negative 
+        absorption. Do this manually or use the trim parameter in 
+        pymcr_handler_for_file() to specify a wavelength range to keep 
+        (for example, trim=(400,700) keeps all data between 400 
+        and 700 nm).
+              
+        For now, the entire dataset will be offset by the absolute 
+        value of the most negative value to make all values 
+        non-negative, but this may lead to incorrect results.
+              
+        *************************************************************
+        *************************************************************               
+              
+        """)
+        X+= np.abs(np.min(X[X<0]))
+
     c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,save_figs=save_figs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save,smooth_param=smooth_param)
     if smooth_param is not None:
-        print(f"Data was smoothed with Savitzky-Golay filter (window_length={smooth_param[0]}, polyorder={smooth_param[1]})")
-        print("In the first plot, the dashed lines show the original data and \nthe solid lines show the reconstructed data from MCR. \n" \
-        "Both of these sets of lines should overlay perfectly. If the dashed lines \n are substantially different from the solid lines,\n" \
-        "start by adjusting the smooth parameter (try increasing the window length \n or decreasing the polyorder) and see if that improves things.")
+        print(f""" 
+        *************************************************************
+        ****                    Smoothing                        ****
+        *************************************************************               
+        Data were smoothed with Savitzky-Golay filter 
+        (window_length={smooth_param[0]}, polyorder={smooth_param[1]})").
+
+        In the first plot, the dashed lines show the original data and 
+        the solid lines show the reconstructed data from MCR. 
+        
+        Both of these sets of lines should overlay perfectly. If the 
+        dashed lines are substantially different from the solid lines,
+        start by adjusting the smooth parameter (try increasing the 
+        window length or decreasing the polyorder) and see if that 
+        improves the match.
+        
+        *************************************************************
+        *************************************************************             
+        """)
     return c,ST,C
 
 
