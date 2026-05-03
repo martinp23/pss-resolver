@@ -67,7 +67,7 @@ def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_sav
         start by adjusting the smooth parameter (try increasing the 
         window length or decreasing the polyorder) and see if that 
         improves the match.
-        
+
         *************************************************************
         *************************************************************             
         """)
@@ -79,6 +79,30 @@ def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=F
     X_orig = X.copy()
     if isinstance(smooth_param,tuple) and len(smooth_param)==2: 
         X = savgol_filter(X, window_length=smooth_param[0], polyorder=smooth_param[1], axis=1)
+
+    if np.any(X < 0):
+        print("""
+        *************************************************************
+        ****     Warning     Negative values found in data.      ****
+        *************************************************************      
+        
+        Please check your data and consider re-collecting with higher 
+        integration time.
+        
+        Or, you can trim the data to remove wavelengths with negative 
+        absorption. Do this manually or use the trim parameter in 
+        pymcr_handler_for_file() to specify a wavelength range to keep 
+        (for example, trim=(400,700) keeps all data between 400 
+        and 700 nm).
+              
+        Treat the results below with caution! The results are 
+        likely to be incorrect and should not be reported.
+              
+        *************************************************************
+        *************************************************************               
+              
+        """)
+        X+= np.abs(np.min(X[X<0]))
 
     c,spec,X_calc = mcr_factors(X, n_components=2, known_id=0, init_guess="nmf",method='mvol')
     res_ST,res_C = get_acceptable_solutions(X, spec, c, n=201, lb=-1, ub=1,threshold=threshold)
