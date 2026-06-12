@@ -3,20 +3,106 @@ import numpy as np
 import matplotlib.pyplot as plt
 from .fit import mcr_factors,get_acceptable_solutions,calc_reconstruction_error
 from typing import Optional,Union
+from scipy.signal import savgol_filter
 
-
-
-def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True,save_figs=True) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def pymcr_handler_for_file(file: str, threshold: float=1.001, n_solutions_to_save=10,save_csvs=True,save_figs=True,smooth=False,trim=False) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     data = pd.read_excel(file,index_col=0)
-    X = data.values[:,:].T
     print(f"##### Results for file: {file} #####")
-    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,save_figs=save_figs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save)
 
+    if smooth is True:
+        smooth_param = (21,3) # window length, polyorder
+    elif isinstance(smooth,tuple) and len(smooth)==2:
+        smooth_param = smooth
+    else:        
+        smooth_param = None
+
+    if trim is not False:
+        if isinstance(trim,tuple) and len(trim)==2:
+            data = data[(data.index >= trim[0]) & (data.index <= trim[1])]
+        else:
+            print("Trim parameter should be a tuple of (lower_bound, upper_bound). Ignoring trim.")
+    
+    X = data.values[:,:].T
+
+    # fudge data < 0 to zero to avoid issues with MCR-NMF
+    if np.any(X < 0):
+        print("""
+        *************************************************************
+        ****     Warning     Negative values found in data.      ****
+        *************************************************************      
+        
+        Please check your data and consider re-collecting with higher 
+        integration time.
+        
+        Or, you can trim the data to remove wavelengths with negative 
+        absorption. Do this manually or use the trim parameter in 
+        pymcr_handler_for_file() to specify a wavelength range to keep 
+        (for example, trim=(400,700) keeps all data between 400 
+        and 700 nm).
+              
+        For now, the entire dataset will be offset by the absolute 
+        value of the most negative value to make all values 
+        non-negative, but this may lead to incorrect results.
+              
+        *************************************************************
+        *************************************************************               
+              
+        """)
+        X+= np.abs(np.min(X[X<0]))
+
+    c,ST,C= proc_data(data.index,X,data.columns,threshold=threshold,save_csvs=save_csvs,save_figs=save_figs,filename=file.split('.')[0], n_solutions_to_save=n_solutions_to_save,smooth_param=smooth_param)
+    if smooth_param is not None:
+        print(f""" 
+        *************************************************************
+        ****                    Smoothing                        ****
+        *************************************************************               
+        Data were smoothed with Savitzky-Golay filter 
+        (window_length={smooth_param[0]}, polyorder={smooth_param[1]})").
+
+        In the first plot, the dashed lines show the original data and 
+        the solid lines show the reconstructed data from MCR. 
+        
+        Both of these sets of lines should overlay perfectly. If the 
+        dashed lines are substantially different from the solid lines,
+        start by adjusting the smooth parameter (try increasing the 
+        window length or decreasing the polyorder) and see if that 
+        improves the match.
+
+        *************************************************************
+        *************************************************************             
+        """)
     return c,ST,C
 
 
 
-def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=False,filename=None, n_solutions_to_save=10):
+def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=False,filename=None, n_solutions_to_save=10,smooth_param=None):
+    X_orig = X.copy()
+    if isinstance(smooth_param,tuple) and len(smooth_param)==2: 
+        X = savgol_filter(X, window_length=smooth_param[0], polyorder=smooth_param[1], axis=1)
+
+    if np.any(X < 0):
+        print("""
+        *************************************************************
+        ****     Warning     Negative values found in data.      ****
+        *************************************************************      
+        
+        Please check your data and consider re-collecting with higher 
+        integration time.
+        
+        Or, you can trim the data to remove wavelengths with negative 
+        absorption. Do this manually or use the trim parameter in 
+        pymcr_handler_for_file() to specify a wavelength range to keep 
+        (for example, trim=(400,700) keeps all data between 400 
+        and 700 nm).
+              
+        Treat the results below with caution! The results are 
+        likely to be incorrect and should not be reported.
+              
+        *************************************************************
+        *************************************************************               
+              
+        """)
+        X+= np.abs(np.min(X[X<0]))
 
     c,spec,X_calc = mcr_factors(X, n_components=2, known_id=0, init_guess="nmf",method='mvol')
     res_ST,res_C = get_acceptable_solutions(X, spec, c, n=201, lb=-1, ub=1,threshold=threshold)
@@ -32,8 +118,13 @@ def proc_data(wavelengths,X,labels,threshold=1.001, save_csvs=False, save_figs=F
         print(f"{x}:  Acceptable solutions: {min_C[i,0]:.2f}-{max_C[i,0]:.2f} : {min_C[i,1]:.2f}-{max_C[i,1]:.2f}")
     plt.subplots(2,1,figsize=(4,5))
     plt.subplot(211)
-    plt.plot(wavelengths,X_calc.T,label=labels)
-    plt.plot(wavelengths,X.T,'--')
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    for i in range(X.shape[0]):
+        color = colors[i % len(colors)]
+        plt.plot(wavelengths, X_calc.T[:,i], color=color, label=labels[i])
+        plt.plot(wavelengths, X_orig.T[:,i], '--', color=color)
+    # plt.plot(wavelengths,X_calc.T,label=labels)
+    # plt.plot(wavelengths,X_orig.T,'--')
     plt.legend()
     plt.xlabel('Wavelength [nm]')
     plt.ylabel('Absorbance')
