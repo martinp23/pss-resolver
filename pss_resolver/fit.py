@@ -177,7 +177,7 @@ def rotation_simple(ST: np.ndarray, C,x) -> (np.ndarray,np.ndarray):
     ST_rot[ST_rot < 0] = 0
     return C_rot,ST_rot
 
-def get_acceptable_solutions(s, ST_calc, C_calc,n=201,lb=-1,ub=1,threshold=1.001) -> (list,list):
+def get_acceptable_solutions(s, ST_calc, C_calc,n=201,lb=-1,ub=1,threshold=1.001,plot_well=False) -> (list,list):
     orig_err = calc_reconstruction_error(s,C_calc,ST_calc)
     res = []
     for x in np.linspace(lb,ub,n):
@@ -192,6 +192,17 @@ def get_acceptable_solutions(s, ST_calc, C_calc,n=201,lb=-1,ub=1,threshold=1.001
     
     res_ST = [r[3] for r in res if r[1] <= threshold]
     res_C = [r[2] for r in res if r[1] <= threshold]
+
+    if plot_well:
+        plt.plot(np.linspace(lb,ub,n),[r[1] for r in res])
+        plt.xlabel("Rotation parameter x")
+        plt.ylabel("Relative error (reconstruction + known spectrum deviation)")
+        plt.title("Error landscape of solutions")
+        plt.ylim(0, min(10, max(r[1] for r in res)*1.1))
+        plt.axhline(threshold, color='red', linestyle='--', label='Acceptable error threshold')
+        plt.legend()
+        plt.show()
+
     return res_ST,res_C
 
 
