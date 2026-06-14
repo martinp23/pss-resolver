@@ -1,0 +1,50 @@
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[project]
+name = "pss_resolver"
+description = "Resolve photostationary state (PSS) spectra using multivariate curve resolution (MCR)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Martin Peeks", email = "m.peeks@unsw.edu.au"}
+]
+keywords = ["photochemistry", "spectroscopy", "multivariate-curve-resolution", "MCR"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+dependencies = [
+    "numpy>=2.0",
+    "scipy>=1.10",
+    "pandas>=2.0",
+    "matplotlib>=3.8",
+    "scikit-learn>=1.3",
+    "openpyxl>=3.0",
+    "pymcr>=0.5.1",
+    "mcrnmf>=0.1.2",
+]
+version = "0.1.0"  
+
+[tool.uv.build-backend]
+module-root = ""       # Tells uv your source files are at the workspace root
+module-name = "pss_resolver"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4"
+]
+
+notebook = [
+    "jupyter>=1.0",
+    "ipykernel>=6.0",
+    "notebook>=7.0",
+    "nbconvert>=7.0",
+]
+
+
